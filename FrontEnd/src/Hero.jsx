@@ -1,7 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import blood from "./blood-donation.png"
-import blood1 from "./imgg.png"
+import blood1 from "./imgg.png";   // only this one is used
 
 const Hero = () => {
   return (
@@ -10,9 +9,7 @@ const Hero = () => {
       <div className="absolute -top-10 -left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-red-400/20 rounded-full blur-3xl"></div>
 
-      
       <div className="relative z-10 container mx-auto px-6 py-24 flex flex-col lg:flex-row items-center justify-between gap-10">
-      
         <div className="lg:w-1/2 space-y-8 text-center lg:text-left">
           <motion.h1
             initial={{ y: 40, opacity: 0 }}
@@ -30,9 +27,8 @@ const Hero = () => {
             transition={{ delay: 0.3, duration: 0.8 }}
             className="text-lg text-pink-100 max-w-md mx-auto lg:mx-0 leading-relaxed"
           >
-            BloodBuddy connects donors with patients in need — fast, reliable,
-            and community-driven. Your one donation could be someone’s second
-            chance.
+            BloodBuddy connects donors with patients in need — fast, reliable, and community-driven.
+            Your one donation could be someone’s second chance.
           </motion.p>
 
           <motion.div
@@ -56,21 +52,18 @@ const Hero = () => {
           </motion.div>
         </div>
 
-      
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ delay: 0.6, duration: 0.8 }}
           className="lg:w-1/2 flex justify-center relative"
         >
-          {/* 3D Blood Illustration */}
           <img
-            src={blood1 }
+            src={blood1}
             alt="Blood Donation 3D Illustration"
             className="w-[420px] drop-shadow-2xl hover:scale-105 transition-transform duration-500"
           />
 
-        
           <motion.img
             src="https://cdn-icons-png.flaticon.com/512/4661/4661995.png"
             alt="Blood Drop"

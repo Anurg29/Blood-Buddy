@@ -29,9 +29,13 @@ const redIcon = new L.Icon({
 // ✅ Helper: recenter map when props change
 function RecenterMap({ center }) {
   const map = useMap();
+
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     if (center) map.setView(center, 13);
   }, [center]);
+  /* eslint-enable react-hooks/exhaustive-deps */
+
   return null;
 }
 
@@ -56,10 +60,7 @@ const MapView = ({ donors = [], center }) => {
 
       {/* 🩸 Donors */}
       {donors.map((donor, idx) => (
-        <Marker
-          key={idx}
-          position={[donor.latitude, donor.longitude]}
-        >
+        <Marker key={idx} position={[donor.latitude, donor.longitude]}>
           <Popup>
             <strong>{donor.name}</strong> <br />
             Blood Group: {donor.blood_group} <br />
