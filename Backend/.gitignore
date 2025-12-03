@@ -9,6 +9,7 @@ venv/
 .env
 .env.*
 *.env
+!.env.example
 
 # Logs
 *.log
@@ -30,3 +31,8 @@ dmypy.json
 
 # Byte-compiled / optimized / DLL files
 *.so
+
+# Firebase credentials
+secrets/
+*firebase*.json
+!firebase.json
