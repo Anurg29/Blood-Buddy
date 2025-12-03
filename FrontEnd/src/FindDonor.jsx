@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import Navbar from './Navbar';  
+import Navbar from './Navbar';
 import Footer from './Footer';
 
 const FindDonor = () => {
@@ -13,16 +13,18 @@ const FindDonor = () => {
     whatsapp: '',
     address: ''
   });
-  
-  const [locationStatus, setLocationStatus] = useState('idle'); 
+
+  const [locationStatus, setLocationStatus] = useState('idle');
   const [error, setError] = useState('');
   const [manualAddress, setManualAddress] = useState(false);
 
 
+  const [coords, setCoords] = useState({ latitude: null, longitude: null });
+
   const fetchLocation = () => {
     setLocationStatus('pending');
     setError('');
-    
+
     if (!navigator.geolocation) {
       setLocationStatus('unsupported');
       setError('Geolocation is not supported by your browser');
@@ -33,27 +35,29 @@ const FindDonor = () => {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
+          setCoords({ latitude, longitude }); // Store coordinates
+
           const response = await axios.get(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`,
             {
               headers: {
-                'User-Agent': 'BloodDonorApp/1.0' // Required by Nominatim usage policy
+                'User-Agent': 'BloodDonorApp/1.0'
               }
             }
           );
-          
-          const address = response.data.display_name || 
-                         `${response.data.address?.road || ''}, ${response.data.address?.city || ''}, ${response.data.address?.country || ''}`;
-          
+
+          const address = response.data.display_name ||
+            `${response.data.address?.road || ''}, ${response.data.address?.city || ''}, ${response.data.address?.country || ''}`;
+
           if (!address.trim()) {
             throw new Error('No address information found');
           }
-          
+
           setFormData(prev => ({
             ...prev,
             address: address
           }));
-          
+
           setLocationStatus('success');
         } catch (err) {
           console.error('Geocoding error:', err);
@@ -77,78 +81,89 @@ const FindDonor = () => {
   };
 
   useEffect(() => {
-   
+
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
 
-  try {
-    const response = await fetch(`${process.env.REACT_APP_API_URL}/donors/add`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...formData,
-        age: Number(formData.age),
-        weight: Number(formData.weight)
-      }),
-    });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
 
-    const data = await response.json();
-
-    if (!response.ok) {
-     
-      throw new Error(data.message || 'Registration failed');
+    if (!coords.latitude || !coords.longitude) {
+      setError('Location is required to find nearby donors. Please enable location.');
+      return;
     }
 
-    alert('Registration successful!');
-    setFormData({
-      name: '',
-      age: '',
-      
-      weight: '',
-      bloodGroup: '',
-      mobile: '',
-      whatsapp: '',
-      address: ''
-    });
-    
-  } catch (err) {
-    console.error('Registration error:', err);
-    setError(err.message || 'An error occurred. Please try again.');
-  }
-};
+    try {
+      // Use the new request endpoint
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/donors/request`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add Authorization header if you have the token stored
+          // 'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({
+          blood_group: formData.bloodGroup,
+          location: formData.address,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          // Optional: Send other details if backend needs them
+          recipient_name: formData.name,
+          recipient_contact: formData.mobile
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Request failed');
+      }
+
+      alert(`Request sent! Notified ${data.notifications_sent} donors nearby.`);
+
+      setFormData({
+        name: '',
+        age: '',
+        weight: '',
+        bloodGroup: '',
+        mobile: '',
+        whatsapp: '',
+        address: ''
+      });
+
+    } catch (err) {
+      console.error('Request error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
+    }
+  };
 
   const enableLocation = () => {
     fetchLocation();
   };
 
   return (<>
-    <Navbar />  
+    <Navbar />
     <div className="max-w-4xl mx-auto p-6 pt-24">
-    
+
       <div className="bg-gradient-to-r from-red-50 to-pink-50 border-l-4 border-red-500 rounded-lg p-6 mb-8 shadow-sm">
         <h1 className="text-3xl font-bold text-red-700 mb-4 text-center">
           Find Blood Donors in Your Area
         </h1>
         <p className="text-gray-700 text-lg leading-relaxed text-justify">
-          Welcome to Blood Buddy's donor matching system - your lifeline in emergency situations. 
-          Our platform is designed to quickly connect blood recipients with verified donors in their 
-          vicinity using advanced location-based technology. By leveraging our extensive database of 
-          thousands of registered donors across the Vidarbha region, we ensure that you can find 
-          compatible blood types within your proximity. Simply fill out the form below with your 
-          requirements, and our intelligent matching algorithm will instantly search for available 
-          donors near your location. We prioritize your privacy while maintaining the highest standards 
-          of safety and reliability. In critical moments when every second counts, Blood Buddy serves 
-          as your trusted companion to bridge the gap between need and availability, making the process 
+          Welcome to Blood Buddy's donor matching system - your lifeline in emergency situations.
+          Our platform is designed to quickly connect blood recipients with verified donors in their
+          vicinity using advanced location-based technology. By leveraging our extensive database of
+          thousands of registered donors across the Vidarbha region, we ensure that you can find
+          compatible blood types within your proximity. Simply fill out the form below with your
+          requirements, and our intelligent matching algorithm will instantly search for available
+          donors near your location. We prioritize your privacy while maintaining the highest standards
+          of safety and reliability. In critical moments when every second counts, Blood Buddy serves
+          as your trusted companion to bridge the gap between need and availability, making the process
           of finding blood donors efficient, secure, and hassle-free.
         </p>
         <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -162,20 +177,20 @@ const handleSubmit = async (e) => {
 
       <div className="bg-white shadow-lg rounded-lg p-6">
         <h2 className="text-2xl font-bold mb-6 text-center text-red-600">
-          Blood Donor Registration
+          Request Blood
         </h2>
-        
-     
+
+
         {locationStatus === 'pending' && (
           <div className="mb-6 p-4 bg-yellow-100 rounded-lg flex items-center">
             <svg className="animate-spin h-5 w-5 mr-3 text-yellow-600" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" fill="none" strokeWidth="4" stroke="currentColor" 
-                      strokeDasharray="31.415, 31.415" />
+              <circle cx="12" cy="12" r="10" fill="none" strokeWidth="4" stroke="currentColor"
+                strokeDasharray="31.415, 31.415" />
             </svg>
             <span>Detecting your location... Please wait</span>
           </div>
         )}
-        
+
         {locationStatus === 'denied' && (
           <div className="mb-6 p-4 bg-red-100 rounded-lg flex items-center">
             <svg className="h-5 w-5 mr-3 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,7 +199,7 @@ const handleSubmit = async (e) => {
             <span>{error}</span>
           </div>
         )}
-        
+
         {locationStatus === 'success' && (
           <div className="mb-6 p-4 bg-green-100 rounded-lg flex items-center">
             <svg className="h-5 w-5 mr-3 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -338,14 +353,14 @@ const handleSubmit = async (e) => {
               type="submit"
               className="px-6 py-3 rounded-md text-white font-medium bg-red-600 hover:bg-red-700 transition duration-300 transform hover:scale-105"
             >
-              Find Nearby Donor 
+              Find Nearby Donor
             </button>
           </div>
         </form>
       </div>
     </div>
     <Footer />
-    </>
+  </>
   );
 };
 

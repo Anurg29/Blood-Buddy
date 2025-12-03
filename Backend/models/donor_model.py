@@ -9,3 +9,4 @@ class Donor(BaseModel):
     latitude: float = Field(..., description="Latitude of donor’s location")
     longitude: float = Field(..., description="Longitude of donor’s location")
     last_donated: Optional[str] = None
+    fcm_token: Optional[str] = None  # Firebase Cloud Messaging token for push notifications
